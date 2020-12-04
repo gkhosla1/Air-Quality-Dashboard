@@ -1,14 +1,18 @@
-# This file will create a stremlit dashboard to explore the data that was prepared in the other notebooks
+# This file will create a streamlit dashboard to explore the data that was prepared in the other notebooks
 
+#import packages
 import streamlit as st
 import pandas as pd
-import numpy as np
 import pydeck as pdk
 import altair as alt
 import datetime as dt
 pd.options.mode.chained_assignment = None
 
+# set page layout to wide, so multiple columns can be used
 st.set_page_config(layout='wide')
+
+# add title and subtitles (almost all text will be created using markdown since it has much 
+#   better formatting options than streamlit's default text functions)
 st.markdown('<h1 style="text-align:center">Air Quality Data for World Cities</h1>',
            unsafe_allow_html=True)
 st.markdown('<h3 style="text-align:center">Created By Griffin Khosla</h2>',
@@ -16,6 +20,10 @@ st.markdown('<h3 style="text-align:center">Created By Griffin Khosla</h2>',
 st.markdown('<h3 style="text-align:center">MA346-SN2</h2>',
            unsafe_allow_html=True)
 
+######
+# INTRO SECTION
+######
+# create columns for first section (intro stuff)
 info_spc1, info1, info_spc2, info2, info_spc3 = st.beta_columns((1, 5, 1, 5, 1))
 
 info1.markdown("<h2 style='text-align:center'>General Info</h2><p style='text-align:center'>This dashboard explores 2019 air quality data for world cities. It is built from a dataset compiled by me as part of the final project. The air quality data was scraped from IQ Air's website, since is was not downloadable. Population data was downloaded from the UN website. These data sources returned 4,680 cities and 1,860 cities, respectively, but this dashboard only displays data for the 710 cities that were in both datasets.</p>", unsafe_allow_html=True)
@@ -25,16 +33,21 @@ info2.markdown("<h2 style='text-align:center'>Data Description</h2><p style='tex
 # Read in dataset
 df = pd.read_csv('final_data.csv')
 
-# Main map
+#####
+# MAP SECTION
+#####
+# create columns on page, map in center column
 map_spc1, map1, map_spc2 = st.beta_columns((1, 2, 1))
 
+# title text
 map1.markdown("<h2 style='text-align:center'>Map of Air Quality and Population for World Cities</h2><p style='text-align:center'>The height of a cylinder corresponds to the population of the city, and the color corresponds to air quality (bins based on IQ Air's classifications). The map can become slow/unresponsive, so refresh the page if it is not working. Click + Drag to move around the map, Ctrl + Click + Drag to rotate view, Scroll to zoom. Hover over a cylinder to see details on the city.</p>",
               unsafe_allow_html=True)
 
-# add color legend below map
+# add color legend image below map
 map1.image("aq_legend.JPG",
           width=750)
 
+# data manipulation for mapping
 # create dataframe with only necessary columns for mapping
 df_map = df[['city',
              'country',
@@ -97,12 +110,17 @@ map1.pydeck_chart(pdk.Deck(
     }
 ))
 
-# Continent & country breakdowns
+#####
+# CHARTING SECTION
+#####
+# set up columns
 brk1, brk_empty, brk2, brk3 = st.beta_columns((8, 1, 7, 2))
 
+# title text for continent chart
 brk1.markdown("<h2 style='text-align:center'>Breakdown by Continent</h2>", unsafe_allow_html=True)
 
-# new dataframe, cleaning
+# data manipulation for conitinent chart
+# new dataframe, create population string column for tooltips
 df_plots = df[['city',
                 'country',
                 'continent',
@@ -150,34 +168,45 @@ brk1.altair_chart(
     use_container_width = True
 )
 
+# chart use instructions
 brk1.markdown("<p style='text-align:center'>Each point on the scatterplot represents a city. Hover over a point to see details about the city. Select a continent in the legend to highlight its cities. Use the dropdown menu to focus on data for a specific continent.</p>",
              unsafe_allow_html=True)
 
+# coutnry breakdown title
 brk2.markdown("<h2 style='text-align:center'>Breakdown by Country</h2>", unsafe_allow_html=True)
 
-# dataframe for country plotting
+# dataframe for country plotting (only countries from selected continent included)
 df_plots_country = df_plots_cont.sort_values(by=['country'])
 
-# user selection of country, filter df
+# possible country selections
 country_opts = list(df_plots_country.country.unique())
+
+# if all continents selected, set default country shown to australia (because it looks cooler than Afghanistan's plot)
 if cont=="All":
     def_index = 5
 else:
     def_index = 0
+
+# dropdown selector    
 country = brk2.selectbox('Choose a Country',
                       country_opts,
                       def_index)
+
+# filter df for that country's data
 df_plots_country = df_plots_country[df_plots_country['country']==country]
 
-# user selection for aggregation and chart type
+# spacing
 brk3.header(' ')
 brk3.header(' ')
 brk3.text(' ')
+
+# user selection for aggregation and chart type
 agg = brk3.checkbox('Aggregate', value=False)
 ann = brk3.checkbox('Annual', value=False)
 
-# show plot based on selection
+# show plot based on checkbox selections
 if (agg==False and ann==False): # all cities, monthly
+    # keep only necessary columns, clean and manipulate data for charting
     keep_cols = list(df_plots_country.columns[0:15]) + ['pop_2020', 'pop_str']
     df_plot1 = df_plots_country[keep_cols].sort_values(by=['pop_2020'], ascending=False)
     leg_cities = list(df_plot1['city'][:5])
@@ -198,6 +227,7 @@ if (agg==False and ann==False): # all cities, monthly
                                                  'dec':dt.datetime(2019, 12, 1)})
     df_plot1 = df_plot1.dropna()
     sel_plot1 = alt.selection_multi(fields=['city'], bind='legend')
+    # draw chart
     brk2.altair_chart(
         alt.Chart(df_plot1).mark_line(point=True).encode(
                 x = alt.X('month(month)', axis=alt.Axis(title='Month (2019)')),
@@ -214,13 +244,13 @@ if (agg==False and ann==False): # all cities, monthly
         use_container_width=True
     )
 elif (agg==True and ann==False): # country mean, monthly
+    # keep only necessary columns, clean and manipulate data for charting
     keep_cols = list(df_plots_country.columns[0:15])
     df_plot2 = df_plots_country[keep_cols]
     df_plot2 = df_plot2.groupby('country').agg('mean').reset_index()
     df_plot2 = df_plot2.melt(id_vars=['country'],
                    var_name='month',
                    value_name='pm25')
-
     df_plot2['month'] = df_plot2['month'].map({'jan':dt.datetime(2019, 1, 1),
                                      'feb':dt.datetime(2019, 2, 1),
                                      'mar':dt.datetime(2019, 3, 1),
@@ -233,6 +263,7 @@ elif (agg==True and ann==False): # country mean, monthly
                                      'oct':dt.datetime(2019, 10, 1),
                                      'nov':dt.datetime(2019, 11, 1),
                                      'dec':dt.datetime(2019, 12, 1)})
+    # draw chart
     brk2.altair_chart(
         alt.Chart(df_plot2).mark_line(point=True).encode(
                 x = alt.X('month(month)', axis=alt.Axis(title='Month (2019)')),
@@ -242,6 +273,7 @@ elif (agg==True and ann==False): # country mean, monthly
         use_container_width=True
     )
 elif(agg==False and ann==True): # all cities, 2017-2019
+    # keep only necessary columns, clean and manipulate data for charting
     keep_cols = list(df_plots_country.columns[0:3]) + list(df_plots_country.columns[15:19])
     df_plot3 = df_plots_country[keep_cols].sort_values(by=['pop_2020'], ascending=False)
     leg_cities = list(df_plot3['city'][:5])
@@ -253,6 +285,7 @@ elif(agg==False and ann==True): # all cities, 2017-2019
                                             'avg_2019':dt.datetime(2019, 1, 1)})
     df_plot3 = df_plot3.dropna()
     sel_plot3 = alt.selection_multi(fields=['city'], bind='legend')
+    # draw chart
     brk2.altair_chart(
         alt.Chart(df_plot3).mark_line(point=True).encode(
                     x = alt.X('year(year)', axis=alt.Axis(title='Year', tickCount=3)),
@@ -268,6 +301,7 @@ elif(agg==False and ann==True): # all cities, 2017-2019
         use_container_width=True
     )
 else: # country mean, 2017-2019
+    # keep only necessary columns, clean and manipulate data for charting
     keep_cols = list(df_plots_country.columns[0:3]) + list(df_plots_country.columns[15:18])
     df_plot4 = df_plots_country[keep_cols]
     df_plot4 = df_plot4.groupby('country').agg('mean').reset_index()
@@ -278,6 +312,7 @@ else: # country mean, 2017-2019
                                             'avg_2018':dt.datetime(2018, 1, 1),
                                             'avg_2019':dt.datetime(2019, 1, 1)})
     df_plot4 = df_plot4.dropna()
+    # draw chart
     brk2.altair_chart(
         alt.Chart(df_plot4).mark_line(point=True).encode(
                 x = alt.X('year(year)', axis=alt.Axis(title='Year', tickCount=3)),
@@ -287,12 +322,21 @@ else: # country mean, 2017-2019
         use_container_width=True
     )
 
+# Chart use instructions
 brk2.markdown("<p style='text-align:center'>Select a country using the dropdown filter (the countries listed in this filter depend on the continent selected in the previous section). Use the check boxes to change how the data is organized: checking the \"Aggregate\" box will show the average PM2.5 concentration for all cities in that country; checking the \"Annual\" box will switch from 2019 monthly values to 2017-2019 average values on the x axis. When the data is not aggregated, only the top 5 most populous cities in that country are shown in the legend. Select a city in the legend to highlight its line. Hover over points on the chart for more informaion.</p>",
              unsafe_allow_html=True)
 
+#####
+# RAW DATA SECTION
+###
+
+# title text
 st.markdown('<h2 style="text-align:center">Data Tables</h2>', unsafe_allow_html=True)
+
+# create columns
 tbl1, tbl_spc1, tbl2, tbl_spc2, tbl3 = st.beta_columns((7, 1, 7, 1, 7))
 
+# create dataframe to use for these tables (more presentable column names and order)
 df_tbl = pd.DataFrame({'City':df['city'],
                        'Country':df['country'],
                        'iso3':df['iso3'],
@@ -317,35 +361,48 @@ df_tbl = pd.DataFrame({'City':df['city'],
                        'Latitude':df['lat'],
                        'Longitude':df['lon']})
 
+# first table: top 15 cities for pm2.5 concentration (most polluted)
 tbl1.markdown('<h3 style="text-align:center">Highest PM2.5 Concentration</h3>', unsafe_allow_html=True)
 df_tbl1 = df_tbl[['City',
                    'Country',
                    'Avg PM2.5 2019']].sort_values(by=['Avg PM2.5 2019'], ascending=False).reset_index(drop=True)
+# restructure data for visual appeal
 df_tbl1.index = [i + 1 for i in df_tbl1.index]
 df_tbl1 = df_tbl1.astype({'Avg PM2.5 2019':'str'})
 tbl1.table(df_tbl1[:15])
 
+# second table: bottom 15 cities for pm2.5 concentration (cleanest air)
 tbl2.markdown('<h3 style="text-align:center">Lowest PM2.5 Concentration</h3>', unsafe_allow_html=True)
 df_tbl2 = df_tbl[['City',
                    'Country',
                    'Avg PM2.5 2019']].sort_values(by=['Avg PM2.5 2019']).reset_index(drop=True)
+# restructure data for visual appeal
 df_tbl2.index = [i + 1 for i in df_tbl2.index]
 df_tbl2 = df_tbl2.astype({'Avg PM2.5 2019':'str'})
 tbl2.table(df_tbl2[:15])
 
+# third table: top 15 most populous cities
 tbl3.markdown('<h3 style="text-align:center">Most Populous</h3>', unsafe_allow_html=True)
 df_tbl3 = df_tbl[['City',
                  'Country',
                  '2020 Population',
                  'Avg PM2.5 2019']].sort_values(by=['2020 Population'], ascending=False).reset_index(drop=True)
+# restructure data for visual appeal
 df_tbl3['2020 Population'] = df_tbl3['2020 Population'].apply(pop_conv)
 df_tbl3.index = [i + 1 for i in df_tbl3.index]
 df_tbl3 = df_tbl3.astype({'Avg PM2.5 2019':'str'})
 tbl3.table(df_tbl3[:15])
 
+# full data table
+# title
 st.markdown('<h3 style="text-align:center">Full Data</h3>', unsafe_allow_html=True)
+
+# data table
 st.dataframe(df_tbl.sort_values(by=['City']).reset_index(drop=True))
 
+#####
+# FOOTNOTES
+#####
 st.markdown(
     'Air Quality data from <a href="https://www.iqair.com/world-most-polluted-cities?continent=&country=&state=&page=1&perPage=50&cities=" target="_blank">IQ Air</a>',
     unsafe_allow_html=True)
