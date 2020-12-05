@@ -45,7 +45,7 @@ map1.markdown("<h2 style='text-align:center'>Map of Air Quality and Population f
 
 # add color legend image below map
 map1.image("aq_legend.JPG",
-          width=800)
+          width=900)
 
 # data manipulation for mapping
 # create dataframe with only necessary columns for mapping
