@@ -155,7 +155,7 @@ else:
     df_plots_cont = df_plots[df_plots['continent']==cont]
 
 # interactive scatterplot
-selection = alt.selection_multi(fields=['continent'], bind='legend')
+selection = alt.selection_point(fields=['continent'], bind='legend')
 brk1.altair_chart(
     alt.Chart(df_plots_cont).mark_circle(size=60).encode(
             x=alt.X('pop_2020', axis=alt.Axis(title='2020 Population')),
@@ -163,7 +163,7 @@ brk1.altair_chart(
             tooltip=['city', 'country', 'avg_2019', 'pop_str'],
             color=alt.Color('continent', scale=alt.Scale(scheme='category10')),
             opacity=alt.condition(selection, alt.value(0.6), alt.value(0.08)))
-        .add_selection(selection)
+        .add_params(selection)
         .interactive(),
     use_container_width = True
 )
@@ -226,7 +226,7 @@ if (agg==False and ann==False): # all cities, monthly
                                                  'nov':dt.datetime(2019, 11, 1),
                                                  'dec':dt.datetime(2019, 12, 1)})
     df_plot1 = df_plot1.dropna()
-    sel_plot1 = alt.selection_multi(fields=['city'], bind='legend')
+    sel_plot1 = alt.selection_point(fields=['city'], bind='legend')
     # draw chart
     brk2.altair_chart(
         alt.Chart(df_plot1).mark_line(point=True).encode(
@@ -239,7 +239,7 @@ if (agg==False and ann==False): # all cities, monthly
                 tooltip=[alt.Tooltip('city', title='City'),
                          alt.Tooltip('pop_str', title='Population'),
                          alt.Tooltip('pm25', title='PM2.5 Concentration')])
-            .add_selection(sel_plot1)
+            .add_params(sel_plot1)
             .interactive(),
         use_container_width=True
     )
@@ -296,7 +296,7 @@ elif(agg==False and ann==True): # all cities, 2017-2019
                     opacity=alt.condition(sel_plot3, alt.value(0.6), alt.value(0.08)),
                     tooltip=[alt.Tooltip('city', title='City'),
                              alt.Tooltip('pm25', title='PM2.5 Concentration')])
-            .add_selection(sel_plot3)
+            .add_params(sel_plot3)
             .interactive(),
         use_container_width=True
     )
