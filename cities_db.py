@@ -24,7 +24,7 @@ st.markdown('<h3 style="text-align:center">MA346-SN2</h2>',
 # INTRO SECTION
 ######
 # create columns for first section (intro stuff)
-info_spc1, info1, info_spc2, info2, info_spc3 = st.beta_columns((1, 5, 1, 5, 1))
+info_spc1, info1, info_spc2, info2, info_spc3 = st.columns([1, 5, 1, 5, 1])
 
 info1.markdown("<h2 style='text-align:center'>General Info</h2><p style='text-align:center'>This dashboard explores 2019 air quality data for world cities. It is built from a dataset compiled by me as part of the final project. The air quality data was scraped from IQ Air's website, since is was not downloadable. Population data was downloaded from the UN website. These data sources returned 4,680 cities and 1,860 cities, respectively, but this dashboard only displays data for the 710 cities that were in both datasets.</p>", unsafe_allow_html=True)
 
@@ -37,7 +37,7 @@ df = pd.read_csv('final_data.csv')
 # MAP SECTION
 #####
 # create columns on page, map in center column
-map_spc1, map1, map_spc2 = st.beta_columns((1, 2, 1))
+map_spc1, map1, map_spc2 = st.columns([1, 2, 1])
 
 # title text
 map1.markdown("<h2 style='text-align:center'>Map of Air Quality and Population for World Cities</h2><p style='text-align:center'>The height of a cylinder corresponds to the population of the city, and the color corresponds to air quality (bins based on IQ Air's classifications). The map can become slow/unresponsive, so refresh the page if it is not working. Click + Drag to move around the map, Ctrl + Click + Drag to rotate view, Scroll to zoom. Hover over a cylinder to see details on the city.</p>",
@@ -114,7 +114,7 @@ map1.pydeck_chart(pdk.Deck(
 # CHARTING SECTION
 #####
 # set up columns
-brk1, brk_empty, brk2, brk3 = st.beta_columns((8, 1, 7, 2))
+brk1, brk_empty, brk2, brk3 = st.columns([8, 1, 7, 2])
 
 # title text for continent chart
 brk1.markdown("<h2 style='text-align:center'>Breakdown by Continent</h2>", unsafe_allow_html=True)
@@ -334,7 +334,7 @@ brk2.markdown("<p style='text-align:center'>Select a country using the dropdown 
 st.markdown('<h2 style="text-align:center">Data Tables</h2>', unsafe_allow_html=True)
 
 # create columns
-tbl1, tbl_spc1, tbl2, tbl_spc2, tbl3 = st.beta_columns((7, 1, 7, 1, 7))
+tbl1, tbl_spc1, tbl2, tbl_spc2, tbl3 = st.columns([7, 1, 7, 1, 7])
 
 # create dataframe to use for these tables (more presentable column names and order)
 df_tbl = pd.DataFrame({'City':df['city'],
