@@ -247,7 +247,7 @@ elif (agg==True and ann==False): # country mean, monthly
     # keep only necessary columns, clean and manipulate data for charting
     keep_cols = list(df_plots_country.columns[0:15])
     df_plot2 = df_plots_country[keep_cols]
-    df_plot2 = df_plot2.groupby('country').agg('mean').reset_index()
+    df_plot2 = df_plot2.groupby('country')[['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']].agg('mean').reset_index()
     df_plot2 = df_plot2.melt(id_vars=['country'],
                    var_name='month',
                    value_name='pm25')
@@ -284,7 +284,7 @@ elif(agg==False and ann==True): # all cities, 2017-2019
                                             'avg_2018':dt.datetime(2018, 1, 1),
                                             'avg_2019':dt.datetime(2019, 1, 1)})
     df_plot3 = df_plot3.dropna()
-    sel_plot3 = alt.selection_multi(fields=['city'], bind='legend')
+    sel_plot3 = alt.selection_point(fields=['city'], bind='legend')
     # draw chart
     brk2.altair_chart(
         alt.Chart(df_plot3).mark_line(point=True).encode(
@@ -304,7 +304,7 @@ else: # country mean, 2017-2019
     # keep only necessary columns, clean and manipulate data for charting
     keep_cols = list(df_plots_country.columns[0:3]) + list(df_plots_country.columns[15:18])
     df_plot4 = df_plots_country[keep_cols]
-    df_plot4 = df_plot4.groupby('country').agg('mean').reset_index()
+    df_plot4 = df_plot4.groupby('country')[['avg_2017', 'avg_2018', 'avg_2019']].agg('mean').reset_index()
     df_plot4 = df_plot4.melt(id_vars=['country'],
                              var_name='year',
                              value_name='pm25')
